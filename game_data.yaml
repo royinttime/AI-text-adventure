@@ -1,0 +1,19 @@
+world_description: A world ravaged by a magical cataclysm.
+locations:
+  Village:
+    description: A small, ruined village. Smoke still rises from some of the buildings.
+    exits:
+      north: Forest
+  Forest:
+    description: A dark and twisted forest. The trees are gnarled and broken.
+    exits:
+      south: Village
+characters:
+  Roy:
+    personality: A hardened survivor.
+    backstory: Lost their family in the cataclysm.
+    location: Village
+  Knight:
+    personality: A noble and brave knight.
+    backstory: Protecting the village.
+    location: Village
