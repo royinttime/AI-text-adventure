@@ -1,5 +1,5 @@
 class Location:
-    def __init__(self, name, description, exits):
+    def __init__(self, name, data):
         self.name = name
-        self.description = description
-        self.exits = exits  # Dictionary: {direction: Location}
+        self.description = data.get('description')
+        self.connections = data.get('connections', [])

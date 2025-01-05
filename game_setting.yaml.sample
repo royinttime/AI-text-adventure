@@ -2,18 +2,36 @@ world_description: A world ravaged by a magical cataclysm.
 locations:
   Village:
     description: A small, ruined village. Smoke still rises from some of the buildings.
-    exits:
-      north: Forest
+    connections:
+      - Forest
   Forest:
     description: A dark and twisted forest. The trees are gnarled and broken.
-    exits:
-      south: Village
+    connections:
+      - Village
 characters:
   Roy:
+    age: 38
+    relationships:
+      - name: Charlie
+        type: friend
     personality: A hardened survivor.
     backstory: Lost their family in the cataclysm.
     location: Village
-  Knight:
+    appearance:
+    activities_and_mannerisms:
+    ai_config:
+      scenario:
+      example_dialogues:
+  Charlie:
+    age: 50
+    relationships:
+      - name: Roy
+        type: friend
     personality: A noble and brave knight.
     backstory: Protecting the village.
     location: Village
+    appearance:
+    activities_and_mannerisms:
+    ai_config:
+      scenario:
+      example_dialogues:
