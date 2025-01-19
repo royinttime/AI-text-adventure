@@ -1,3 +1,17 @@
+import yaml
+
+def load_data_from_yaml(filename):
+    '''Loads data from a YAML file.'''
+    try:
+        with open(filename, 'r') as f:
+            return yaml.safe_load(f)
+    except FileNotFoundError:
+        print(f"Error: File '{filename}' not found.")
+        return None
+    except yaml.YAMLError as e:
+        print(f"Error: Invalid YAML format in '{filename}': {e}")
+        return None
+
 def save_game_state(player, characters, filename="save_game.yaml"):
     '''Saves the current game state to a YAML file.'''
 

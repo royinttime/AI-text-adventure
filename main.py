@@ -1,42 +1,13 @@
 import os
+# TODO: switch to Google's new library(from google import genai)
 import google.generativeai as genai
 from dotenv import load_dotenv
-import yaml
-from util import save_game_state, load_game_state
+from util import load_data_from_yaml, save_game_state, load_game_state
 from character import Character
 from location import Location
 from setting import GEIMINI_SAFETY_SETTINGS
 
 GAME_SETTING_FILENAME = 'game_setting.yaml'
-
-def load_data_from_yaml(filename):
-    '''Loads data from a YAML file.'''
-    try:
-        with open(filename, 'r') as f:
-            return yaml.safe_load(f)
-    except FileNotFoundError:
-        print(f"Error: File '{filename}' not found.")
-        return None
-    except yaml.YAMLError as e:
-        print(f"Error: Invalid YAML format in '{filename}': {e}")
-        return None
-
-# TODO: move to Narrator class
-def generate_world_setting(aibot, world_description):
-    '''Generate detail description from basic world setting.'''
-    prompt = f'''Generate a more detailed description of a world described as: {world_description}. Include details about the environment, atmosphere, and any notable features.'''
-    try:
-        response = aibot.generate_content(
-            prompt,
-            generation_config=genai.types.GenerationConfig(
-                max_output_tokens=200,
-                temperature=1.0
-            )
-        )
-        return response.text
-    except Exception as e:
-        print(f'Error generating world description: {e}')
-        return 'A mysterious world.'
 
 def handle_player_action(player, characters, locations, action):
     '''Handles player actions and their effects on the game world.'''
@@ -86,13 +57,18 @@ def handle_player_action(player, characters, locations, action):
 def handle_character_interaction(player, characters, target_name):
     '''Handles detailed interactions with a specific character.'''
 
-    target_char = characters.get(target_name.title())
+    char_name = target_name.title()
+    if player.name == char_name:
+        print('Can not interact with yourself')
+        return
+
+    target_char = characters.get(char_name)
     if not target_char or target_char.location != player.location:
-        print(f'{target_name} is not here.')
+        print(f'{char_name} is not here.')
         return
 
     while True:
-        interaction = input(f"What do you do with {target_name}? (Type 'back' to return): ")
+        interaction = input(f"What do you do with {char_name}? (Type 'back' to return): ")
         if interaction.lower() == 'back':
             break
 
@@ -104,20 +80,16 @@ def handle_character_interaction(player, characters, target_name):
 
 def main():
     load_dotenv()
+    # TODO: Create AI agent class and have a config decide what part use which agent
     genai.configure(api_key=os.environ.get('GOOGLE_API_KEY'))
     gemini_model = genai.GenerativeModel(model_name=os.environ.get('MODEL_NAME'), safety_settings=GEIMINI_SAFETY_SETTINGS)
 
     # Laod game setting from a YAML file
+    # TODO: extend this flow. might leave the setting to YAML file.
+    #       info to pure text file for RAG pipeline
     game_data = load_data_from_yaml(GAME_SETTING_FILENAME)
     if game_data is None:
         exit()
-
-    # Generate stating world description
-    world_description = game_data.get('world_description', 'A default world.')
-    detailed_world_description = generate_world_setting(gemini_model, world_description)
-    print('\nWorld Setting:')
-    print(detailed_world_description)
-    print('-' * 20)
 
     # Create objects to store the info from game setting file
     locations = {}
@@ -126,6 +98,15 @@ def main():
     characters = {}
     for char_name, char_data in game_data.get('characters', {}).items():
         characters[char_name] = Character(char_name, char_data)
+
+    narrator = Narrator(gemini_model)
+
+    # Generate stating world description
+    world_description = game_data.get('world_description', 'A default world.')
+    detailed_world_description = narrator.generate_world_setting(world_description)
+    print('\nWorld Setting:')
+    print(detailed_world_description)
+    print('-' * 20)
 
     player_name = input("Enter your character's name: ")
     if player_name in characters:
